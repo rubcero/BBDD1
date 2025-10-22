@@ -4,24 +4,24 @@ BEGIN;
 -- 1. ESCUDERÍA
 -- =============================
 CREATE TABLE Escuderia (
-    EscuderiaRef VARCHAR(10) PRIMARY KEY,
-    Nombre VARCHAR(100) NOT NULL,
-    Nacionalidad VARCHAR(50),
-    Url VARCHAR(255)
+    EscuderiaRef TEXT  PRIMARY KEY,
+    Nombre TEXT  NOT NULL,
+    Nacionalidad TEXT ,
+    Url TEXT 
 );
 
 -- =============================
 -- 2. PILOTO
 -- =============================
 CREATE TABLE Piloto (
-    PilotoRef VARCHAR(10) PRIMARY KEY,
-    Nombre VARCHAR(50) NOT NULL,
-    Apellido VARCHAR(50) NOT NULL,
+    PilotoRef TEXT  PRIMARY KEY,
+    Nombre TEXT  NOT NULL,
+    Apellido TEXT  NOT NULL,
     F_nac DATE,
-    Nacionalidad VARCHAR(50),
+    Nacionalidad TEXT ,
     Numero INT,
-    Url VARCHAR(255),
-    EscuderiaRef VARCHAR(10),
+    Url TEXT ,
+    EscuderiaRef TEXT ,
     FOREIGN KEY (EscuderiaRef) REFERENCES Escuderia(EscuderiaRef)
 );
 
@@ -30,18 +30,18 @@ CREATE TABLE Piloto (
 -- =============================
 CREATE TABLE Temporada (
     Año INT PRIMARY KEY,
-    Url VARCHAR(255)
+    Url TEXT 
 );
 
 -- =============================
 -- 4. CIRCUITO
 -- =============================
 CREATE TABLE Circuito (
-    CircuitoRef VARCHAR(10) PRIMARY KEY,
-    Nombre VARCHAR(100) NOT NULL,
-    Ciudad VARCHAR(100),
-    Pais VARCHAR(50),
-    Url VARCHAR(255),
+    CircuitoRef TEXT  PRIMARY KEY,
+    Nombre TEXT  NOT NULL,
+    Ciudad TEXT ,
+    Pais TEXT ,
+    Url TEXT ,
     Longitud DECIMAL(6,3),
     Latitud DECIMAL(9,6),
     Altura INT
@@ -52,11 +52,11 @@ CREATE TABLE Circuito (
 -- =============================
 CREATE TABLE GranPremio (
     IdGranPremio INT PRIMARY KEY AUTO_INCREMENT,
-    Nombre VARCHAR(100) NOT NULL,
+    Nombre TEXT  NOT NULL,
     Ronda INT,
     FechaHora DATETIME,
-    Url VARCHAR(255),
-    CircuitoRef VARCHAR(10),
+    Url TEXT ,
+    CircuitoRef TEXT ,
     Año INT,
     FOREIGN KEY (CircuitoRef) REFERENCES Circuito(CircuitoRef),
     FOREIGN KEY (Año) REFERENCES Temporada(Año)
@@ -85,10 +85,10 @@ CREATE TABLE Vuelta (
 -- 8. CORRE  (Piloto ↔ GranPremio)
 -- =============================
 CREATE TABLE Corre (
-    PilotoRef VARCHAR(10),
+    PilotoRef TEXT ,
     IdGranPremio INT,
     Posicion INT,
-    Estado VARCHAR(50),
+    Estado TEXT ,
     Puntos DECIMAL(4,1),
     PRIMARY KEY (PilotoRef, IdGranPremio),
     FOREIGN KEY (PilotoRef) REFERENCES Piloto(PilotoRef),
@@ -99,7 +99,7 @@ CREATE TABLE Corre (
 -- 9. CALIFICA  (Piloto ↔ GranPremio)
 -- =============================
 CREATE TABLE Califica (
-    PilotoRef VARCHAR(10),
+    PilotoRef TEXT ,
     IdGranPremio INT,
     Posicion INT,
     Q1 DECIMAL(6,3),
@@ -114,7 +114,7 @@ CREATE TABLE Califica (
 -- 10. HACEVUELTAS (Piloto ↔ Vuelta ↔ GranPremio)
 -- =============================
 CREATE TABLE HaceVueltas (
-    PilotoRef VARCHAR(10),
+    PilotoRef TEXT ,
     IdVuelta INT,
     IdGranPremio INT,
     PRIMARY KEY (PilotoRef, IdVuelta, IdGranPremio),
@@ -128,7 +128,7 @@ CREATE TABLE HaceVueltas (
 -- =============================
 CREATE TABLE RealizaPitStops (
     Id INT PRIMARY KEY AUTO_INCREMENT,
-    PilotoRef VARCHAR(10),
+    PilotoRef TEXT ,
     IdBox INT,
     IdGranPremio INT,
     Hora TIME,
