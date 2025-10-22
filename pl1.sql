@@ -51,10 +51,10 @@ CREATE TABLE Circuito (
 -- 5. GRAN PREMIO
 -- =============================
 CREATE TABLE GranPremio (
-    IdGranPremio INT PRIMARY KEY AUTO_INCREMENT,
+    IdGranPremio INT PRIMARY KEY  ,
     Nombre TEXT  NOT NULL,
     Ronda INT,
-    FechaHora DATETIME,
+    FechaHora DATE,
     Url TEXT ,
     CircuitoRef TEXT ,
     Año INT,
@@ -66,7 +66,7 @@ CREATE TABLE GranPremio (
 -- 6. BOXES
 -- =============================
 CREATE TABLE Boxes (
-    IdBox INT PRIMARY KEY AUTO_INCREMENT,
+    IdBox INT PRIMARY KEY  ,
     Hora TIME,
     Tiempo DECIMAL(5,3)
 );
@@ -75,7 +75,7 @@ CREATE TABLE Boxes (
 -- 7. VUELTA
 -- =============================
 CREATE TABLE Vuelta (
-    IdVuelta INT PRIMARY KEY AUTO_INCREMENT,
+    IdVuelta INT PRIMARY KEY  ,
     N_vuelta INT,
     Posicion INT,
     Tiempo DECIMAL(6,3)
@@ -127,7 +127,7 @@ CREATE TABLE HaceVueltas (
 -- 11. REALIZAPITSTOPS (Piloto ↔ Boxes ↔ GranPremio)
 -- =============================
 CREATE TABLE RealizaPitStops (
-    Id INT PRIMARY KEY AUTO_INCREMENT,
+    Id INT PRIMARY KEY  ,
     PilotoRef TEXT ,
     IdBox INT,
     IdGranPremio INT,
