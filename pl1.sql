@@ -242,9 +242,9 @@ CREATE TABLE Califica (
     PilotoRef TEXT ,
     IdGranPremio INT,
     Posicion INT,
-    Q1 DECIMAL TEXT,
-    Q2 DECIMAL TEXT,
-    Q3 DECIMAL TEXT,
+    Q1  TEXT,
+    Q2  TEXT,
+    Q3  TEXT,
     PRIMARY KEY (PilotoRef, IdGranPremio)
 );
 
