@@ -142,81 +142,85 @@ CREATE TABLE Estado_int(
 -- 1. ESCUDERÍA
 -- =============================
 CREATE TABLE Escuderia (
-    EscuderiaRef TEXT  PRIMARY KEY,
+    EscuderiaRef TEXT,
     Nombre TEXT   ,
     Nacionalidad TEXT ,
-    Url TEXT 
+    Url TEXT,
+    primary key(EscuderiaRef)
 );
 
 -- =============================
 -- 2. PILOTO
 -- =============================
 CREATE TABLE Piloto (
-    PilotoRef TEXT  PRIMARY KEY,
+    PilotoRef TEXT,
     Nombre TEXT   ,
     Apellido TEXT   ,
     F_nac DATE,
     Nacionalidad TEXT ,
     Numero INT,
     Url TEXT ,
-    EscuderiaRef TEXT ,
-    FOREIGN KEY (EscuderiaRef) REFERENCES Escuderia(EscuderiaRef)
+    EscuderiaRef TEXT,
+    PRIMARY KEY(PilotoRef)  
 );
 
 -- =============================
 -- 3. TEMPORADA
 -- =============================
 CREATE TABLE Temporada (
-    Año INT PRIMARY KEY,
-    Url TEXT 
+    Año INT,
+    Url TEXT,
+    primary key(Año)
 );
 
 -- =============================
 -- 4. CIRCUITO
 -- =============================
 CREATE TABLE Circuito (
-    CircuitoRef TEXT  PRIMARY KEY,
+    CircuitoRef TEXT,
     Nombre TEXT   ,
     Ciudad TEXT ,
     Pais TEXT ,
     Url TEXT ,
-    Longitud DECIMAL(6,3),
-    Latitud DECIMAL(9,6),
-    Altura INT
+    Longitud TEXT,
+    Latitud TEXT,
+    Altura INT,
+    PRIMARY KEY(CircuitoRef)
 );
 
 -- =============================
 -- 5. GRAN PREMIO
 -- =============================
 CREATE TABLE GranPremio (
-    IdGranPremio INT PRIMARY KEY  ,
+    IdGranPremio INT ,
     Nombre TEXT   ,
     Ronda INT,
     FechaHora DATE,
     Url TEXT ,
     CircuitoRef TEXT ,
     Año INT,
-    FOREIGN KEY (CircuitoRef) REFERENCES Circuito(CircuitoRef),
-    FOREIGN KEY (Año) REFERENCES Temporada(Año)
+    PRIMARY KEY(IdGranPremio)  
 );
 
 -- =============================
 -- 6. BOXES
 -- =============================
 CREATE TABLE Boxes (
-    IdBox INT PRIMARY KEY  ,
+    IdBox INT,
     Hora TIME,
-    Tiempo DECIMAL(5,3)
+    Tiempo TEXT,
+     PRIMARY KEY(IdBox)  
 );
 
 -- =============================
 -- 7. VUELTA
 -- =============================
 CREATE TABLE Vuelta (
-    IdVuelta INT PRIMARY KEY  ,
+    IdVuelta INT   ,
     N_vuelta INT,
     Posicion INT,
-    Tiempo DECIMAL(6,3)
+    Tiempo TEXT,
+    PRIMARY KEY(IdVuelta)
 );
 
 -- =============================
@@ -227,10 +231,8 @@ CREATE TABLE Corre (
     IdGranPremio INT,
     Posicion INT,
     Estado TEXT ,
-    Puntos DECIMAL(4,1),
-    PRIMARY KEY (PilotoRef, IdGranPremio),
-    FOREIGN KEY (PilotoRef) REFERENCES Piloto(PilotoRef),
-    FOREIGN KEY (IdGranPremio) REFERENCES GranPremio(IdGranPremio)
+    Puntos TEXT,
+    PRIMARY KEY (PilotoRef, IdGranPremio)
 );
 
 -- =============================
@@ -240,12 +242,10 @@ CREATE TABLE Califica (
     PilotoRef TEXT ,
     IdGranPremio INT,
     Posicion INT,
-    Q1 DECIMAL(6,3),
-    Q2 DECIMAL(6,3),
-    Q3 DECIMAL(6,3),
-    PRIMARY KEY (PilotoRef, IdGranPremio),
-    FOREIGN KEY (PilotoRef) REFERENCES Piloto(PilotoRef),
-    FOREIGN KEY (IdGranPremio) REFERENCES GranPremio(IdGranPremio)
+    Q1 DECIMAL TEXT,
+    Q2 DECIMAL TEXT,
+    Q3 DECIMAL TEXT,
+    PRIMARY KEY (PilotoRef, IdGranPremio)
 );
 
 -- =============================
@@ -255,25 +255,20 @@ CREATE TABLE HaceVueltas (
     PilotoRef TEXT ,
     IdVuelta INT,
     IdGranPremio INT,
-    PRIMARY KEY (PilotoRef, IdVuelta, IdGranPremio),
-    FOREIGN KEY (PilotoRef) REFERENCES Piloto(PilotoRef),
-    FOREIGN KEY (IdVuelta) REFERENCES Vuelta(IdVuelta),
-    FOREIGN KEY (IdGranPremio) REFERENCES GranPremio(IdGranPremio)
+    PRIMARY KEY (PilotoRef, IdVuelta, IdGranPremio)
 );
 
 -- =============================
 -- 11. REALIZAPITSTOPS (Piloto ↔ Boxes ↔ GranPremio)
 -- =============================
 CREATE TABLE RealizaPitStops (
-    Id INT PRIMARY KEY  ,
+    Id INT ,
     PilotoRef TEXT ,
     IdBox INT,
     IdGranPremio INT,
     Hora TIME,
-    Tiempo DECIMAL(5,3),
-    FOREIGN KEY (PilotoRef) REFERENCES Piloto(PilotoRef),
-    FOREIGN KEY (IdBox) REFERENCES Boxes(IdBox),
-    FOREIGN KEY (IdGranPremio) REFERENCES GranPremio(IdGranPremio)
+    Tiempo TEXT,
+    primary key (id)
 );
 
 ROLLBACK;
