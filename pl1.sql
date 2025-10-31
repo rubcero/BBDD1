@@ -391,4 +391,65 @@ SELECT
 FROM Pit_stop_int;
 
 
+--Listado de todos los circuitos y número de Grandes Premios que ha albergado
+SELECT 
+    c.Nombre AS Circuito,
+    COUNT(gp.IdGranPremio) AS Num_GrandesPremios
+FROM Circuito c
+LEFT JOIN GranPremio gp ON gp.CircuitoRef = c.CircuitoRef
+GROUP BY c.Nombre
+ORDER BY Num_GrandesPremios DESC;
+
+--Número de Grandes Premios corridos y puntos de Ayrton Senna
+SELECT 
+    p.Nombre || ' ' || p.Apellido AS Piloto,
+    COUNT(DISTINCT c.IdGranPremio) AS GrandesPremios_Corridos,
+    SUM(CAST(c.Puntos AS NUMERIC)) AS Total_Puntos
+FROM Corre c
+JOIN Piloto p ON c.PilotoRef = p.PilotoRef
+WHERE p.Nombre ILIKE 'Ayrton' AND p.Apellido ILIKE 'Senna'
+GROUP BY p.Nombre, p.Apellido;
+
+--Pilotos nacidos después del 31/12/1999 y número de carreras corridas
+SELECT 
+    p.Nombre,
+    p.Apellido,
+    COUNT(DISTINCT c.IdGranPremio) AS Num_Carreras
+FROM Piloto p
+LEFT JOIN Corre c ON p.PilotoRef = c.PilotoRef
+WHERE p.F_nac > '1999-12-31'
+GROUP BY p.Nombre, p.Apellido
+ORDER BY Num_Carreras DESC;
+
+--Escuderías españolas o italianas y número de Grandes Premios corridos
+SELECT 
+    e.Nombre AS Escuderia,
+    e.Nacionalidad,
+    COUNT(DISTINCT c.IdGranPremio) AS Num_GrandesPremios
+FROM Escuderia e
+JOIN Corre c ON e.EscuderiaRef = c.EscuderiaId
+WHERE e.Nacionalidad ILIKE 'Spain' 
+   OR e.Nacionalidad ILIKE 'Española'
+   OR e.Nacionalidad ILIKE 'Italy'
+   OR e.Nacionalidad ILIKE 'Italiana'
+GROUP BY e.Nombre, e.Nacionalidad
+ORDER BY Num_GrandesPremios DESC;
+
+--Vista: pilotos y puntos por temporada
+CREATE OR REPLACE VIEW Vista_Pilotos_Temporada AS
+SELECT 
+    t.Año,
+    p.PilotoRef,
+    p.Nombre || ' ' || p.Apellido AS Piloto,
+    SUM(CAST(c.Puntos AS NUMERIC)) AS Total_Puntos
+FROM Corre c
+JOIN Piloto p ON c.PilotoRef = p.PilotoRef
+JOIN GranPremio gp ON c.IdGranPremio = gp.IdGranPremio
+JOIN Temporada t ON gp.Año = t.Año
+GROUP BY t.Año, p.PilotoRef, p.Nombre, p.Apellido
+ORDER BY t.Año, Total_Puntos DESC;
+
+SELECT * FROM Vista_Pilotos_Temporada;
+
+
 ROLLBACK;
