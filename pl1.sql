@@ -138,6 +138,9 @@ CREATE TABLE Estado_int(
 
 
 
+
+
+
 -- =============================
 -- 1. ESCUDERÍA
 -- =============================
@@ -229,10 +232,11 @@ CREATE TABLE Vuelta (
 CREATE TABLE Corre (
     PilotoRef TEXT ,
     IdGranPremio INT,
+    Escuderiaid TEXT,
     Posicion INT,
     Estado TEXT ,
     Puntos TEXT,
-    PRIMARY KEY (PilotoRef, IdGranPremio)
+    PRIMARY KEY (PilotoRef, IdGranPremio, Escuderiaid)
 );
 
 -- =============================
@@ -270,5 +274,121 @@ CREATE TABLE RealizaPitStops (
     Tiempo TEXT,
     primary key (id)
 );
+
+-----------------------------------------------
+-- 1. Cargar Escuderías
+-----------------------------------------------
+INSERT INTO Escuderia (EscuderiaRef, Nombre, Nacionalidad, Url)
+SELECT 
+    Referncia AS EscuderiaRef,
+    Nombre,
+    Nacionalidad,
+    Url
+FROM Escuderias_Int;
+
+-----------------------------------------------
+-- 2. Cargar Pilotos
+-----------------------------------------------
+INSERT INTO Piloto (PilotoRef, Nombre, Apellido, F_nac, Nacionalidad, Numero, Url)
+SELECT 
+    Referencia AS PilotoRef,
+    Nombre,
+    Apellido,
+    TO_DATE(Fecha_Nac, 'YYYY-MM-DD') AS F_nac,
+    Nacionalidad,
+    NULLIF(Numero, '\N')::INT AS Numero,
+    Url
+FROM Pilotos_Int;
+
+-----------------------------------------------
+-- 3. Cargar Temporadas
+-----------------------------------------------
+INSERT INTO Temporada (Año, Url)
+SELECT 
+    NULLIF(Año, '\N')::INT,
+    Url
+FROM Temporadas_int;
+
+-----------------------------------------------
+-- 4. Cargar Circuitos
+-----------------------------------------------
+INSERT INTO Circuito (CircuitoRef, Nombre, Ciudad, Pais, Url, Longitud, Latitud, Altura)
+SELECT 
+    Referncia AS CircuitoRef,
+    Nombre,
+    Localizacion AS Ciudad,
+    Pais,
+    Url,
+    Longitud,
+    Latitud,
+    NULLIF(Altura, '\N')::INT AS Altura
+FROM Circuitos_Int;
+
+-----------------------------------------------
+-- 5. Cargar Grandes Premios
+-----------------------------------------------
+INSERT INTO GranPremio (IdGranPremio, Nombre, Ronda, FechaHora, Url, CircuitoRef, Año)
+SELECT 
+    NULLIF(Id, '')::INT AS IdGranPremio,
+    Nombre,
+    NULLIF(Ronda, '')::INT AS Ronda,
+    TO_TIMESTAMP(Fecha || ' ' || COALESCE(Hora, '00:00:00'), 'YYYY-MM-DD HH24:MI:SS') AS FechaHora,
+    Url,
+    Id_circuito AS CircuitoRef,
+    NULLIF(Año, '\N')::INT AS Año
+FROM Carrera_Int;
+
+-----------------------------------------------
+-- 6. Cargar Resultados → Corre
+-----------------------------------------------
+INSERT INTO Corre (PilotoRef, IdGranPremio, EscuderiaId, Posicion, Estado, Puntos)
+SELECT DISTINCT ON (Id_piloto, Id_gp, Id_escuderia)
+    Id_piloto AS PilotoRef,
+    NULLIF(Id_gp, '\N')::INT AS IdGranPremio,
+    Id_escuderia AS EscuderiaId,
+    NULLIF(Posicion, '')::INT AS Posicion,
+    Id_estado AS Estado,
+    Puntos
+FROM Resultados_int
+WHERE Id_piloto IS NOT NULL 
+  AND Id_gp IS NOT NULL
+  AND Id_escuderia IS NOT NULL
+ORDER BY Id_piloto, Id_gp, Id_escuderia, NULLIF(Posicion, '\N')::INT;
+
+
+-----------------------------------------------
+-- 7. Cargar Clasificación → Califica
+-----------------------------------------------
+INSERT INTO Califica (PilotoRef, IdGranPremio, Posicion, Q1, Q2, Q3)
+SELECT 
+    Id_piloto AS PilotoRef,
+    NULLIF(Id_carrera, '\N')::INT AS IdGranPremio,
+    NULLIF(Posicion, '\N')::INT AS Posicion,
+    Q1, Q2, Q3
+FROM Clasificacion_int;
+
+-----------------------------------------------
+-- 8. Cargar Vueltas → HaceVueltas
+-----------------------------------------------
+INSERT INTO HaceVueltas (PilotoRef, IdVuelta, IdGranPremio)
+SELECT 
+    Id_piloto AS PilotoRef,
+    NULLIF(Vuelta, '\N')::INT AS IdVuelta,
+    NULLIF(Id, '\N')::INT AS IdGranPremio
+FROM Tiempo_vuelta_int;
+
+-----------------------------------------------
+-- 9. Cargar Paradas → RealizaPitStops
+-----------------------------------------------
+INSERT INTO RealizaPitStops (Id, PilotoRef, IdBox, IdGranPremio, Hora, Tiempo)
+SELECT 
+    ROW_NUMBER() OVER() AS Id,
+    Id_piloto AS PilotoRef,
+    NULLIF(Num_paradas, '\N')::INT AS IdBox,
+    NULLIF(Id_carrera, '\N')::INT AS IdGranPremio,
+    COALESCE(Tiempo, '00:00:00')::TIME AS Hora,
+    Tiempo
+FROM Pit_stop_int;
+
 
 ROLLBACK;
