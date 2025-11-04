@@ -145,11 +145,12 @@ CREATE TABLE Estado_int(
 -- 1. ESCUDERÍA
 -- =============================
 CREATE TABLE Escuderia (
+    Id_escuderia INT,
     EscuderiaRef TEXT,
     Nombre TEXT   ,
     Nacionalidad TEXT ,
     Url TEXT,
-    primary key(EscuderiaRef)
+    primary key(Id_escuderia)
 );
 
 -- =============================
@@ -232,7 +233,7 @@ CREATE TABLE Vuelta (
 CREATE TABLE Corre (
     PilotoRef TEXT ,
     IdGranPremio INT,
-    Escuderiaid TEXT,
+    Escuderiaid INT,
     Posicion INT,
     Estado TEXT ,
     Puntos TEXT,
@@ -278,8 +279,10 @@ CREATE TABLE RealizaPitStops (
 -----------------------------------------------
 -- 1. Cargar Escuderías
 -----------------------------------------------
-INSERT INTO Escuderia (EscuderiaRef, Nombre, Nacionalidad, Url)
+
+INSERT INTO Escuderia (Id_escuderia,EscuderiaRef, Nombre, Nacionalidad, Url)
 SELECT 
+    NULLIF(Id, '\N')::INT AS Id_escuderia,
     Referncia AS EscuderiaRef,
     Nombre,
     Nacionalidad,
@@ -324,36 +327,42 @@ SELECT
     NULLIF(Altura, '\N')::INT AS Altura
 FROM Circuitos_Int;
 
------------------------------------------------
+
+-- =============================
 -- 5. Cargar Grandes Premios
------------------------------------------------
+-- =============================
 INSERT INTO GranPremio (IdGranPremio, Nombre, Ronda, FechaHora, Url, CircuitoRef, Año)
 SELECT 
-    NULLIF(Id, '')::INT AS IdGranPremio,
-    Nombre,
-    NULLIF(Ronda, '')::INT AS Ronda,
-    TO_TIMESTAMP(Fecha || ' ' || COALESCE(Hora, '00:00:00'), 'YYYY-MM-DD HH24:MI:SS') AS FechaHora,
-    Url,
-    Id_circuito AS CircuitoRef,
-    NULLIF(Año, '\N')::INT AS Año
-FROM Carrera_Int;
-
+    NULLIF(r.Id, '')::INT AS IdGranPremio,
+    r.Nombre,
+    NULLIF(r.Ronda, '')::INT AS Ronda,
+    TO_TIMESTAMP(r.Fecha || ' ' || COALESCE(r.Hora, '00:00:00'), 'YYYY-MM-DD HH24:MI:SS') AS FechaHora,
+    r.Url,
+    c.Referncia AS CircuitoRef,  
+    NULLIF(r.Año, '\N')::INT AS Año
+FROM Carrera_Int r
+JOIN Circuitos_Int c 
+    ON c.Id = r.Id_circuito;  
 -----------------------------------------------
 -- 6. Cargar Resultados → Corre
 -----------------------------------------------
 INSERT INTO Corre (PilotoRef, IdGranPremio, EscuderiaId, Posicion, Estado, Puntos)
-SELECT DISTINCT ON (Id_piloto, Id_gp, Id_escuderia)
-    Id_piloto AS PilotoRef,
-    NULLIF(Id_gp, '\N')::INT AS IdGranPremio,
-    Id_escuderia AS EscuderiaId,
-    NULLIF(Posicion, '')::INT AS Posicion,
-    Id_estado AS Estado,
-    Puntos
-FROM Resultados_int
-WHERE Id_piloto IS NOT NULL 
-  AND Id_gp IS NOT NULL
-  AND Id_escuderia IS NOT NULL
-ORDER BY Id_piloto, Id_gp, Id_escuderia, NULLIF(Posicion, '\N')::INT;
+SELECT DISTINCT ON (pi.Referencia, r.Id_gp, r.Id_escuderia)
+    pi.Referencia AS PilotoRef,                       -- <-- referencia textual correcta
+    NULLIF(r.Id_gp, '\N')::INT AS IdGranPremio,
+    NULLIF (r.Id_escuderia, '\N')::INT AS EscuderiaId,
+    NULLIF(r.Posicion, '\N')::INT AS Posicion,
+    r.Id_estado AS Estado,
+    r.Puntos
+FROM Resultados_int r
+JOIN Pilotos_Int pi ON pi.Id = r.Id_piloto          -- unimos por el Id numérico original
+LEFT JOIN Escuderias_Int ei ON ei.Id = r.Id_escuderia
+-- si quieres usar la referencia textual de la escudería en vez del id numérico:
+-- SELECT ... ei.Referncia AS EscuderiaId, ... y JOIN por ei.Id = r.Id_escuderia
+WHERE r.Id_piloto IS NOT NULL
+  AND r.Id_gp IS NOT NULL
+  AND r.Id_escuderia IS NOT NULL
+ORDER BY pi.Referencia, r.Id_gp, r.Id_escuderia, NULLIF(r.Posicion, '\N')::INT;
 
 
 -----------------------------------------------
@@ -427,11 +436,9 @@ SELECT
     e.Nacionalidad,
     COUNT(DISTINCT c.IdGranPremio) AS Num_GrandesPremios
 FROM Escuderia e
-JOIN Corre c ON e.EscuderiaRef = c.EscuderiaId
-WHERE e.Nacionalidad ILIKE 'Spain' 
-   OR e.Nacionalidad ILIKE 'Española'
-   OR e.Nacionalidad ILIKE 'Italy'
-   OR e.Nacionalidad ILIKE 'Italiana'
+JOIN Corre c ON e.Id_escuderia = c.EscuderiaId
+WHERE e.Nacionalidad ILIKE 'Spanish' 
+   OR e.Nacionalidad ILIKE 'Italian'
 GROUP BY e.Nombre, e.Nacionalidad
 ORDER BY Num_GrandesPremios DESC;
 
@@ -452,4 +459,4 @@ ORDER BY t.Año, Total_Puntos DESC;
 SELECT * FROM Vista_Pilotos_Temporada;
 
 
-ROLLBACK;
+COMMIT ;
