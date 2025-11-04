@@ -1,5 +1,10 @@
 BEGIN;
+CREATE DATABASE pl1;
+\c pl1;
+
+
 -- Creacion de tablas intermedias para la carga de datos
+\echo 'Creando la tabla Circuitos Intermedia'
 CREATE TABLE Circuitos_Int(
     Id  TEXT ,
     Referncia TEXT,
@@ -11,9 +16,10 @@ CREATE TABLE Circuitos_Int(
     Altura TEXT,
     Url TEXT
 );
+\echo 'Cargando los datos en la tabla Circuitos Intermedia'
 \copy Circuitos_Int FROM './circuits.csv' WITH (FORMAT csv, HEADER, DELIMITER E',', NULL '\N', ENCODING 'UTF-8');
 
-
+\echo 'Creando la tabla Escudería Intermedia'
 CREATE TABLE Escuderias_Int(
     Id TEXT,
     Referncia TEXT,
@@ -21,9 +27,11 @@ CREATE TABLE Escuderias_Int(
     Nacionalidad TEXT,
     Url TEXT
 );
+\echo 'Cargando los datos en la tabla Escuderias Intermedia'
 \copy Escuderias_Int FROM './constructors.csv' WITH (FORMAT csv, HEADER, DELIMITER E',', NULL '\N', ENCODING 'UTF-8');
 
 
+\echo 'Creando la tabla Pilotos Intermedia'
 CREATE TABLE Pilotos_Int(
     Id TEXT ,
     Referencia TEXT ,
@@ -35,10 +43,11 @@ CREATE TABLE Pilotos_Int(
     Nacionalidad TEXT ,
     Url TEXT 
 );
+\echo 'Cargando los datos en la tabla Pilotos Intermedia'
 \copy Pilotos_Int FROM './drivers.csv' WITH (FORMAT csv, HEADER, DELIMITER E',', NULL '\N', ENCODING 'UTF-8');
 
 
-
+\echo 'Creando la tabla Tiempo Vuelta Intermedia'
 CREATE TABLE Tiempo_vuelta_int(
     Id TEXT ,
     Id_piloto TEXT ,
@@ -47,8 +56,11 @@ CREATE TABLE Tiempo_vuelta_int(
     Tiempo TEXT ,
     Mls TEXT 
 );
+\echo 'Cargando los datos en la tabla Tiempo vuelta Intermedia'
 \copy Tiempo_vuelta_int FROM './lap_times.csv' WITH (FORMAT csv, HEADER, DELIMITER E',', NULL '\N', ENCODING 'UTF-8');
 
+
+\echo 'Creando la tabla Pit Stop Intermedia'
 CREATE TABLE Pit_stop_int(
     Id_carrera TEXT ,
     Id_piloto TEXT ,
@@ -58,9 +70,11 @@ CREATE TABLE Pit_stop_int(
     Duracion TEXT ,
     Mls TEXT 
 );
+\echo 'Cargando los datos en la tabla Pit Stop Intermedia'
 \copy Pit_stop_int FROM './pit_stops.csv' WITH (FORMAT csv, HEADER, DELIMITER E',', NULL '\N', ENCODING 'UTF-8');
 
 
+\echo 'Creando la tabla Clasificación Intermedia'
 CREATE TABLE Clasificacion_int(
     Id TEXT ,
     Id_carrera TEXT ,
@@ -72,9 +86,11 @@ CREATE TABLE Clasificacion_int(
     Q2 TEXT ,
     Q3 TEXT 
 );
+\echo 'Cargando los datos en la tabla Clasificación Intermedia'
 \copy Clasificacion_int FROM './qualifying.csv' WITH (FORMAT csv, HEADER, DELIMITER E',', NULL '\N', ENCODING 'UTF-8');
 
 
+\echo 'Creando la tabla Carrera Intermedia'
 CREATE TABLE Carrera_Int(
     Id TEXT ,
     Año TEXT ,
@@ -95,9 +111,11 @@ CREATE TABLE Carrera_Int(
     Fecha_sprint TEXT ,
     Hora_sprint TEXT 
 );
+\echo 'Cargando los datos en la tabla Carrera Intermedia'
 \copy Carrera_Int FROM './races.csv' WITH (FORMAT csv, HEADER, DELIMITER E',', NULL '\N', ENCODING 'UTF-8');
 
 
+\echo 'Creando la tabla Resultados Intermedia'
 CREATE TABLE Resultados_int(
     Id TEXT ,
     Id_gp TEXT ,
@@ -118,21 +136,28 @@ CREATE TABLE Resultados_int(
     Velocidad_vuelta_rapida TEXT,
     Id_estado TEXT
 );
+\echo 'Cargando los datos en la tabla Resultados Intermedia'
 \copy Resultados_int FROM './results.csv' WITH (FORMAT csv, HEADER, DELIMITER E',', NULL '\N', ENCODING 'UTF-8');
 
 
 
+
+\echo 'Creando la tabla Temporadas Intermedia'
 CREATE TABLE Temporadas_int(
     Año TEXT,
     Url TEXT
 );
+\echo 'Cargando los datos en la tabla Temporadas Intermedia'
 \copy Temporadas_int FROM './seasons.csv' WITH (FORMAT csv, HEADER, DELIMITER E',', NULL '\N', ENCODING 'UTF-8');
 
 
+
+\echo 'Creando la tabla Estado Intermedia'
 CREATE TABLE Estado_int(
     Id TEXT,
     Estado TEXT
 );
+\echo 'Cargando los datos en la tabla Estado Intermedia'
 \copy Estado_int FROM './status.csv' WITH (FORMAT csv, HEADER, DELIMITER E',', NULL '\N', ENCODING 'UTF-8');
 
 
@@ -144,6 +169,7 @@ CREATE TABLE Estado_int(
 -- =============================
 -- 1. ESCUDERÍA
 -- =============================
+\echo 'Creando la tabla Escudería'
 CREATE TABLE Escuderia (
     Id_escuderia INT,
     EscuderiaRef TEXT,
@@ -156,6 +182,7 @@ CREATE TABLE Escuderia (
 -- =============================
 -- 2. PILOTO
 -- =============================
+\echo 'Creando la tabla Piloto'
 CREATE TABLE Piloto (
     PilotoRef TEXT,
     Nombre TEXT   ,
@@ -171,6 +198,7 @@ CREATE TABLE Piloto (
 -- =============================
 -- 3. TEMPORADA
 -- =============================
+\echo 'Creando la tabla Temporada'
 CREATE TABLE Temporada (
     Año INT,
     Url TEXT,
@@ -180,6 +208,7 @@ CREATE TABLE Temporada (
 -- =============================
 -- 4. CIRCUITO
 -- =============================
+\echo 'Creando la tabla Circuito'
 CREATE TABLE Circuito (
     CircuitoRef TEXT,
     Nombre TEXT   ,
@@ -195,6 +224,7 @@ CREATE TABLE Circuito (
 -- =============================
 -- 5. GRAN PREMIO
 -- =============================
+\echo 'Creando la tabla Gran Premio'
 CREATE TABLE GranPremio (
     IdGranPremio INT ,
     Nombre TEXT   ,
@@ -209,6 +239,7 @@ CREATE TABLE GranPremio (
 -- =============================
 -- 6. BOXES
 -- =============================
+\echo 'Creando la tabla Boxes'
 CREATE TABLE Boxes (
     IdBox INT,
     Hora TIME,
@@ -219,6 +250,7 @@ CREATE TABLE Boxes (
 -- =============================
 -- 7. VUELTA
 -- =============================
+\echo 'Creando la tabla Vuelta'
 CREATE TABLE Vuelta (
     IdVuelta INT   ,
     N_vuelta INT,
@@ -230,6 +262,7 @@ CREATE TABLE Vuelta (
 -- =============================
 -- 8. CORRE  (Piloto ↔ GranPremio)
 -- =============================
+\echo 'Creando la tabla Corre'
 CREATE TABLE Corre (
     PilotoRef TEXT ,
     IdGranPremio INT,
@@ -243,6 +276,7 @@ CREATE TABLE Corre (
 -- =============================
 -- 9. CALIFICA  (Piloto ↔ GranPremio)
 -- =============================
+\echo 'Creando la tabla Califica'
 CREATE TABLE Califica (
     PilotoRef TEXT ,
     IdGranPremio INT,
@@ -256,6 +290,7 @@ CREATE TABLE Califica (
 -- =============================
 -- 10. HACEVUELTAS (Piloto ↔ Vuelta ↔ GranPremio)
 -- =============================
+\echo 'Creando la tabla HaceVueltas'
 CREATE TABLE HaceVueltas (
     PilotoRef TEXT ,
     IdVuelta INT,
@@ -266,6 +301,7 @@ CREATE TABLE HaceVueltas (
 -- =============================
 -- 11. REALIZAPITSTOPS (Piloto ↔ Boxes ↔ GranPremio)
 -- =============================
+\echo 'Creando la tabla RealizaPitStops'
 CREATE TABLE RealizaPitStops (
     Id INT ,
     PilotoRef TEXT ,
@@ -279,7 +315,7 @@ CREATE TABLE RealizaPitStops (
 -----------------------------------------------
 -- 1. Cargar Escuderías
 -----------------------------------------------
-
+\echo 'Cargando los datos en la tabla Escudería'
 INSERT INTO Escuderia (Id_escuderia,EscuderiaRef, Nombre, Nacionalidad, Url)
 SELECT 
     NULLIF(Id, '\N')::INT AS Id_escuderia,
@@ -292,6 +328,7 @@ FROM Escuderias_Int;
 -----------------------------------------------
 -- 2. Cargar Pilotos
 -----------------------------------------------
+\echo 'Cargando los datos en la tabla Pilotos'
 INSERT INTO Piloto (PilotoRef, Nombre, Apellido, F_nac, Nacionalidad, Numero, Url)
 SELECT 
     Referencia AS PilotoRef,
@@ -306,6 +343,7 @@ FROM Pilotos_Int;
 -----------------------------------------------
 -- 3. Cargar Temporadas
 -----------------------------------------------
+\echo 'Cargando los datos en la tabla Temporadas'
 INSERT INTO Temporada (Año, Url)
 SELECT 
     NULLIF(Año, '\N')::INT,
@@ -315,6 +353,7 @@ FROM Temporadas_int;
 -----------------------------------------------
 -- 4. Cargar Circuitos
 -----------------------------------------------
+\echo 'Cargando los datos en la tabla Circuitos'
 INSERT INTO Circuito (CircuitoRef, Nombre, Ciudad, Pais, Url, Longitud, Latitud, Altura)
 SELECT 
     Referncia AS CircuitoRef,
@@ -331,6 +370,7 @@ FROM Circuitos_Int;
 -- =============================
 -- 5. Cargar Grandes Premios
 -- =============================
+\echo 'Cargando los datos en la tabla Grandes Premios'
 INSERT INTO GranPremio (IdGranPremio, Nombre, Ronda, FechaHora, Url, CircuitoRef, Año)
 SELECT 
     NULLIF(r.Id, '')::INT AS IdGranPremio,
@@ -346,9 +386,10 @@ JOIN Circuitos_Int c
 -----------------------------------------------
 -- 6. Cargar Resultados → Corre
 -----------------------------------------------
+\echo 'Cargando los datos en la tabla Corre'
 INSERT INTO Corre (PilotoRef, IdGranPremio, EscuderiaId, Posicion, Estado, Puntos)
 SELECT DISTINCT ON (pi.Referencia, r.Id_gp, r.Id_escuderia)
-    pi.Referencia AS PilotoRef,                       -- <-- referencia textual correcta
+    pi.Referencia AS PilotoRef,                       
     NULLIF(r.Id_gp, '\N')::INT AS IdGranPremio,
     NULLIF (r.Id_escuderia, '\N')::INT AS EscuderiaId,
     NULLIF(r.Posicion, '\N')::INT AS Posicion,
@@ -357,8 +398,6 @@ SELECT DISTINCT ON (pi.Referencia, r.Id_gp, r.Id_escuderia)
 FROM Resultados_int r
 JOIN Pilotos_Int pi ON pi.Id = r.Id_piloto          -- unimos por el Id numérico original
 LEFT JOIN Escuderias_Int ei ON ei.Id = r.Id_escuderia
--- si quieres usar la referencia textual de la escudería en vez del id numérico:
--- SELECT ... ei.Referncia AS EscuderiaId, ... y JOIN por ei.Id = r.Id_escuderia
 WHERE r.Id_piloto IS NOT NULL
   AND r.Id_gp IS NOT NULL
   AND r.Id_escuderia IS NOT NULL
@@ -368,6 +407,7 @@ ORDER BY pi.Referencia, r.Id_gp, r.Id_escuderia, NULLIF(r.Posicion, '\N')::INT;
 -----------------------------------------------
 -- 7. Cargar Clasificación → Califica
 -----------------------------------------------
+\echo 'Cargando los datos en la tabla Califica'
 INSERT INTO Califica (PilotoRef, IdGranPremio, Posicion, Q1, Q2, Q3)
 SELECT 
     Id_piloto AS PilotoRef,
@@ -379,6 +419,7 @@ FROM Clasificacion_int;
 -----------------------------------------------
 -- 8. Cargar Vueltas → HaceVueltas
 -----------------------------------------------
+\echo 'Cargando los datos en la tabla HaceVueltas'
 INSERT INTO HaceVueltas (PilotoRef, IdVuelta, IdGranPremio)
 SELECT 
     Id_piloto AS PilotoRef,
@@ -389,6 +430,7 @@ FROM Tiempo_vuelta_int;
 -----------------------------------------------
 -- 9. Cargar Paradas → RealizaPitStops
 -----------------------------------------------
+\echo 'Cargando los datos en la tabla RealizaPitStops'
 INSERT INTO RealizaPitStops (Id, PilotoRef, IdBox, IdGranPremio, Hora, Tiempo)
 SELECT 
     ROW_NUMBER() OVER() AS Id,
