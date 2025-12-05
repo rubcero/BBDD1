@@ -1,6 +1,5 @@
 BEGIN;
-CREATE DATABASE pl1;
-\c pl1;
+
 
 
 -- Creacion de tablas intermedias para la carga de datos
@@ -499,6 +498,252 @@ GROUP BY t.Año, p.PilotoRef, p.Nombre, p.Apellido
 ORDER BY t.Año, Total_Puntos DESC;
 
 SELECT * FROM Vista_Pilotos_Temporada;
+
+
+--Pilotos ganadores por temporada entre 2010 y 2015
+SELECT vp.Año, vp.Piloto, vp.Total_Puntos
+FROM Vista_Pilotos_Temporada vp
+WHERE vp.Año BETWEEN 2010 AND 2015
+  AND vp.Total_Puntos = (
+        SELECT MAX(vp2.Total_Puntos)
+        FROM Vista_Pilotos_Temporada vp2
+        WHERE vp2.Año = vp.Año
+    )
+ORDER BY vp.Año;
+
+--Pilotos que han ganado al menos un Gran Premio (posición = 1)
+SELECT DISTINCT p.Nombre || ' ' || p.Apellido AS Piloto
+FROM Corre c
+JOIN Piloto p ON p.PilotoRef = c.PilotoRef
+WHERE c.Posicion = 1;
+
+--Número de Grandes Premios por país
+SELECT 
+    c.Pais,
+    COUNT(gp.IdGranPremio) AS Num_GrandesPremios
+FROM GranPremio gp
+JOIN Circuito c ON c.CircuitoRef = gp.CircuitoRef
+GROUP BY c.Pais
+ORDER BY Num_GrandesPremios DESC;
+
+--Piloto con la vuelta más rápida en toda la historia
+SELECT  p.Nombre,
+        p.Apellido,
+        v.Tiempo
+FROM Piloto p
+JOIN HaceVueltas hv
+  ON hv.PilotoRef = p.PilotoRef
+JOIN Vuelta v
+  ON v.IdVuelta = hv.IdVuelta
+WHERE v.Tiempo = (
+        SELECT MIN(v2.Tiempo)
+        FROM Vuelta v2
+      );
+
+
+
+--Número de paradas en boxes por piloto en el GP de Mónaco 2023
+
+--Pilotos que han participado en más de 100 Grandes Premios
+SELECT 
+    p.Nombre || ' ' || p.Apellido AS Piloto,
+    COUNT(DISTINCT c.IdGranPremio) AS Num_GP
+FROM Corre c
+JOIN Piloto p ON p.PilotoRef = c.PilotoRef
+GROUP BY p.Nombre, p.Apellido
+HAVING COUNT(DISTINCT c.IdGranPremio) > 100
+ORDER BY Num_GP DESC;
+
+--Trigger auditoria
+
+CREATE TABLE auditoria (
+    id_auditoria SERIAL PRIMARY KEY,
+    tabla        TEXT      NOT NULL,
+    operacion    TEXT      NOT NULL,   -- 'INSERT', 'UPDATE', 'DELETE'
+    usuario      TEXT      NOT NULL,
+    fecha_hora   TIMESTAMP NOT NULL
+);
+
+CREATE OR REPLACE FUNCTION f_auditoria()
+RETURNS TRIGGER AS
+$$
+BEGIN
+    INSERT INTO auditoria(tabla, operacion, usuario, fecha_hora)
+    VALUES (TG_TABLE_NAME, TG_OP, CURRENT_USER, NOW());
+
+    IF TG_OP = 'DELETE' THEN
+        RETURN OLD;
+    ELSE
+        RETURN NEW;
+    END IF;
+END;
+$$ LANGUAGE plpgsql;
+
+-- PILOTOS--
+CREATE TRIGGER trg_aud_pilotos
+AFTER INSERT OR UPDATE OR DELETE ON Piloto
+FOR EACH ROW EXECUTE FUNCTION f_auditoria();
+
+-- ESCUDERIAS--
+CREATE TRIGGER trg_aud_escuderias
+AFTER INSERT OR UPDATE OR DELETE ON Escuderia
+FOR EACH ROW EXECUTE FUNCTION f_auditoria();
+
+-- CIRCUITOS--
+CREATE TRIGGER trg_aud_circuitos
+AFTER INSERT OR UPDATE OR DELETE ON Circuito
+FOR EACH ROW EXECUTE FUNCTION f_auditoria();
+
+-- GRANDES PREMIOS--
+CREATE TRIGGER trg_aud_gp
+AFTER INSERT OR UPDATE OR DELETE ON GranPremio
+FOR EACH ROW EXECUTE FUNCTION f_auditoria();
+
+-- BOXES--
+CREATE TRIGGER trg_aud_boxes
+AFTER INSERT OR UPDATE OR DELETE ON Boxes
+FOR EACH ROW EXECUTE FUNCTION f_auditoria();
+
+-- CORRE--
+CREATE TRIGGER trg_aud_corre
+AFTER INSERT OR UPDATE OR DELETE ON Corre
+FOR EACH ROW EXECUTE FUNCTION f_auditoria();
+
+-- CALIFICA--
+CREATE TRIGGER trg_aud_califica
+AFTER INSERT OR UPDATE OR DELETE ON Califica
+FOR EACH ROW EXECUTE FUNCTION f_auditoria();
+
+-- HACEVUELTAS--
+CREATE TRIGGER trg_aud_haccevueltas
+AFTER INSERT OR UPDATE OR DELETE ON HaceVueltas
+FOR EACH ROW EXECUTE FUNCTION f_auditoria();
+
+-- VUELTA--
+CREATE TRIGGER trg_aud_vuelta
+AFTER INSERT OR UPDATE OR DELETE ON Vuelta
+FOR EACH ROW EXECUTE FUNCTION f_auditoria();
+
+-- REALIZA PIT_STOP--
+CREATE TRIGGER trg_aud_pit_stop
+AFTER INSERT OR UPDATE OR DELETE ON RealizaPitStops
+FOR EACH ROW EXECUTE FUNCTION f_auditoria();
+
+-- TEMPORADA--
+CREATE TRIGGER trg_aud_temporada
+AFTER INSERT OR UPDATE OR DELETE ON Temporada
+FOR EACH ROW EXECUTE FUNCTION f_auditoria();
+
+
+--Trigger pilotos
+CREATE TABLE puntos_piloto (
+    pilotoref      TEXT PRIMARY KEY,
+    puntos_totales INTEGER NOT NULL DEFAULT 0
+);
+
+INSERT INTO puntos_piloto (pilotoref, puntos_totales)
+SELECT 
+    c.pilotoref,
+    COALESCE(SUM(CAST(NULLIF(c.puntos, '\N') AS FLOAT)), 0) AS puntos_totales
+FROM Corre c
+GROUP BY c.pilotoref;
+
+CREATE OR REPLACE FUNCTION f_actualiza_puntos_piloto()
+RETURNS TRIGGER AS
+$$
+DECLARE
+    v_puntos_nuevo INTEGER;
+BEGIN
+    -- Convertimos los puntos TEXT -> INTEGER tratando '\N' como 0
+    v_puntos_nuevo := COALESCE(NULLIF(NEW.puntos, '\N')::INTEGER, 0);
+
+    -- Si ya existe el piloto, sumamos puntos
+    IF EXISTS (SELECT 1 FROM puntos_piloto WHERE pilotoref = NEW.pilotoref) THEN
+        UPDATE puntos_piloto
+        SET puntos_totales = puntos_totales + v_puntos_nuevo
+        WHERE pilotoref = NEW.pilotoref;
+
+    ELSE
+        -- Si no existe, lo insertamos
+        INSERT INTO puntos_piloto (pilotoref, puntos_totales)
+        VALUES (NEW.pilotoref, v_puntos_nuevo);
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+
+
+CREATE TRIGGER trg_puntos_piloto
+AFTER INSERT ON Corre
+FOR EACH ROW
+EXECUTE FUNCTION f_actualiza_puntos_piloto();
+
+--Pruebas
+INSERT INTO Corre (PilotoRef, IdGranPremio, EscuderiaId, Posicion, Estado, Puntos)
+VALUES (863,1,1,5,2,0);
+
+INSERT INTO Corre (PilotoRef, IdGranPremio, EscuderiaId, Posicion, Estado, Puntos)
+VALUES (863,2,1,5,2,10);
+
+INSERT INTO Corre (PilotoRef, IdGranPremio, EscuderiaId, Posicion, Estado, Puntos)
+VALUES (863,1,2,5,2,20);
+
+SELECT * FROM puntos_piloto WHERE pilotoref = '863';
+
+--Creacion de usuario
+CREATE ROLE admin LOGIN PASSWORD 'admin';
+--GRANT ALL PRIVILEGES ON DATABASE pl1 TO admin;
+
+GRANT ALL PRIVILEGES ON DATABASE postgres TO admin;
+GRANT ALL PRIVILEGES ON SCHEMA public TO admin;
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO admin;
+GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO admin;
+
+ALTER DEFAULT PRIVILEGES IN SCHEMA public
+GRANT ALL ON TABLES TO admin;
+
+CREATE ROLE gestor LOGIN PASSWORD 'gestor';
+GRANT CONNECT ON DATABASE postgres TO gestor;
+--GRANT CONNECT ON DATABASE pl1 TO gestor;
+GRANT USAGE ON SCHEMA public TO gestor;
+
+GRANT SELECT, INSERT, UPDATE, DELETE
+ON ALL TABLES IN SCHEMA public TO gestor;
+
+GRANT SELECT, USAGE
+ON ALL SEQUENCES IN SCHEMA public TO gestor;
+
+ALTER DEFAULT PRIVILEGES IN SCHEMA public
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO gestor;
+
+CREATE ROLE analista_f1 LOGIN PASSWORD 'analista_pass';
+
+GRANT CONNECT ON DATABASE formula1 TO analista_f1;
+GRANT USAGE ON SCHEMA public TO analista_f1;
+
+GRANT SELECT ON ALL TABLES IN SCHEMA public TO analista_f1;
+
+ALTER DEFAULT PRIVILEGES IN SCHEMA public
+GRANT SELECT ON TABLES TO analista_f1;
+
+
+CREATE ROLE invitado LOGIN PASSWORD 'invitado';
+
+--GRANT CONNECT ON DATABASE pl1 TO invitado;
+GRANT CONNECT ON DATABASE postgres TO invitado;
+GRANT USAGE ON SCHEMA public TO invitado;
+
+GRANT SELECT ON
+    Piloto,
+    Escuderia,
+    GranPremio,
+    Circuito,
+    Temporada,
+    Corre 
+TO invitado;
+
 
 
 COMMIT ;
